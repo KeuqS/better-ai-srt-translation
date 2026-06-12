@@ -638,6 +638,7 @@ async function startTranslation() {
     if (!apiKey || !srtContent) return;
 
     // Get settings
+    const provider = elements.apiProvider.value;
     const defaultModel = provider === 'openrouter' ? DEFAULT_MODEL_OPENROUTER : DEFAULT_MODEL_GEMINI;
     const model = elements.customModel.value.trim() || defaultModel;
     const targetLanguage = elements.targetLanguage.value;
@@ -679,12 +680,6 @@ async function startTranslation() {
         setChunkStatus(index, 'processing');
         const blockCount = chunk.length;
         const textLength = chunk.reduce((sum, b) => sum + b.text.join(' ').length, 0);
-
-        // Debug for problematic chunks
-        if (index === 107) {
-            log(`⚠️ CHUNK 108 DEBUG: ${blockCount} blocks, ${textLength} chars`, 'error');
-            console.log('Chunk 108 content:', chunk);
-        }
 
         try {
             log(`Chunk ${index + 1} starting (${blockCount} blocks, ${textLength} chars)...`, 'info');

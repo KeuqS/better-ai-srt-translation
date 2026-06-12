@@ -2,6 +2,8 @@
 
 A powerful, browser-based tool for translating SRT subtitle files using AI. Built for speed, accuracy, and ease of use.
 
+![SRT Translator UI](assets/ui.webp)
+
 ## 🎯 What Problem Does It Solve?
 
 Translating subtitles is tedious and expensive:
@@ -10,7 +12,7 @@ Translating subtitles is tedious and expensive:
 - **Existing tools** don't handle the unique challenges of SRT format (split sentences, timing markers, etc.)
 
 **SRT Translator** solves this by:
-1. Preserving all timestamps exactly as-is
+1. Preserving original timestamps by default (optional timing extension is available)
 2. Using a smart marker system to maintain line-by-line correspondence
 3. Processing chunks in parallel for maximum speed
 4. Allowing custom instructions for domain-specific terminology
@@ -125,6 +127,29 @@ Actual: 23 blocks (because sentence ends at block 23)
 1. **Line Structure** (Mandatory) - Each `[B#]` stays on its own line
 2. **Natural Translation** - Idiomatic, not word-for-word
 3. **Word Count** (Soft) - Similar length per line when possible
+
+### Optional Pre-processing (Off by Default)
+
+These checkboxes change subtitle blocks **before** translation. They are disabled by default so the core chunking and marker logic stays unchanged unless you opt in.
+
+| Option | What it does | Important notes |
+|--------|--------------|-----------------|
+| **Merge short split sentences** | Joins very short trailing blocks (e.g. a single word) into the previous block when they look like the same sentence | Reduces block count, which also changes chunk boundaries. Heuristics are tuned for Latin-script subtitles (punctuation + capital-letter checks). Test on your language before relying on it. |
+| **Extend short subtitles** | Extends blocks shorter than ~1.3s, keeping a 50ms gap before the next subtitle | Modifies timestamps. Useful for readability, but no longer a byte-for-byte timing copy. |
+
+### API Provider Notes
+
+- **Google AI Studio** and **OpenRouter** use separate API keys, each stored in `localStorage` under its own key.
+- Default model IDs differ by provider: `gemini-3.1-flash-lite` (Google) vs `google/gemini-3.1-flash-lite` (OpenRouter).
+- If you switch providers, clear or update the custom model field when the model ID format does not match the new provider.
+- API keys are trimmed on save, load, and request to avoid accidental whitespace causing auth failures.
+- On Gemini free tier, keep **Parallel Requests** at `5` (default) to stay under typical RPM quotas. Increase only if your plan allows it.
+
+### RTL Output (Arabic & Persian)
+
+For Arabic and Persian targets, translated lines receive:
+- RTL punctuation normalization (`،`, `؟`, `؛`)
+- Unicode bidirectional markers (RLM, RLE, PDF) so mixed English/RTL text renders correctly in players like VLC
 
 ## 📁 Project Structure
 
