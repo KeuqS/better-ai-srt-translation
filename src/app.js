@@ -8,6 +8,7 @@ const DEFAULT_PARALLEL = 5; // Safe default for Gemini API Free Tier
 const MAX_RETRIES = 3;
 const RETRY_DELAY_MS = 1000;  // 1 second
 const REQUEST_TIMEOUT_MS = 30000;  // 30 seconds
+const SETTINGS_FILE_VERSION = 1;
 
 // Custom API Error class to propagate status and detailed payload
 class APIError extends Error {
@@ -49,7 +50,11 @@ const elements = {
     failedChunks: document.getElementById('failedChunks'),
     optimizeTimings: document.getElementById('optimizeTimings'),
     mergeSubtitles: document.getElementById('mergeSubtitles'),
-    apiProvider: document.getElementById('apiProvider')
+    apiProvider: document.getElementById('apiProvider'),
+    exportSettingsBtn: document.getElementById('exportSettingsBtn'),
+    importSettingsBtn: document.getElementById('importSettingsBtn'),
+    settingsFileInput: document.getElementById('settingsFileInput'),
+    settingsFileStatus: document.getElementById('settingsFileStatus')
 };
 
 // ============================================
@@ -123,6 +128,88 @@ function saveSettings() {
     localStorage.setItem('srt_merge_subtitles', elements.mergeSubtitles.checked);
 }
 
+function getSettingsForExport() {
+    return {
+        version: SETTINGS_FILE_VERSION,
+        exportedAt: new Date().toISOString(),
+        provider: elements.apiProvider.value,
+        apiKeys: {
+            gemini: localStorage.getItem('srt_gemini_api_key') || '',
+            openrouter: localStorage.getItem('srt_openrouter_api_key') || ''
+        },
+        customModel: elements.customModel.value.trim(),
+        targetLanguage: elements.targetLanguage.value,
+        chunkSize: elements.chunkSize.value,
+        parallelRequests: elements.parallelRequests.value,
+        customInstructions: elements.customInstructions.value,
+        optimizeTimings: elements.optimizeTimings.checked,
+        mergeSubtitles: elements.mergeSubtitles.checked
+    };
+}
+
+function setSettingsFileStatus(message, isError = false) {
+    elements.settingsFileStatus.textContent = message;
+    elements.settingsFileStatus.style.color = isError ? 'var(--error)' : 'var(--text-secondary)';
+}
+
+function exportSettings() {
+    const settings = getSettingsForExport();
+    const blob = new Blob([JSON.stringify(settings, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = 'srt-translator-settings.json';
+    link.click();
+    URL.revokeObjectURL(url);
+    setSettingsFileStatus('Settings exported. Keep this file private because it contains API keys.');
+}
+
+function applyImportedSettings(settings) {
+    if (!settings || settings.version !== SETTINGS_FILE_VERSION) {
+        throw new Error(`Unsupported settings file version. Expected ${SETTINGS_FILE_VERSION}.`);
+    }
+    if (!['gemini', 'openrouter'].includes(settings.provider)) {
+        throw new Error('The settings file has an invalid API provider.');
+    }
+
+    elements.apiProvider.value = settings.provider;
+    elements.customModel.value = typeof settings.customModel === 'string' ? settings.customModel : '';
+    if (typeof settings.targetLanguage === 'string') elements.targetLanguage.value = settings.targetLanguage;
+    if (settings.chunkSize !== undefined) elements.chunkSize.value = String(settings.chunkSize);
+    if (settings.parallelRequests !== undefined) elements.parallelRequests.value = String(settings.parallelRequests);
+    elements.customInstructions.value = typeof settings.customInstructions === 'string' ? settings.customInstructions : '';
+    elements.optimizeTimings.checked = settings.optimizeTimings === true;
+    elements.mergeSubtitles.checked = settings.mergeSubtitles === true;
+
+    if (settings.apiKeys && typeof settings.apiKeys === 'object') {
+        for (const provider of ['gemini', 'openrouter']) {
+            if (typeof settings.apiKeys[provider] === 'string') {
+                localStorage.setItem(`srt_${provider}_api_key`, settings.apiKeys[provider].trim());
+            }
+        }
+    }
+
+    const activeKey = localStorage.getItem(`srt_${settings.provider}_api_key`) || '';
+    elements.apiKey.value = activeKey.trim();
+    saveSettings();
+    updateProviderUI();
+    updateTranslateButton();
+    updateTranslateButtonText();
+}
+
+async function importSettings(file) {
+    if (!file) return;
+    try {
+        const settings = JSON.parse(await file.text());
+        applyImportedSettings(settings);
+        setSettingsFileStatus('Settings imported successfully.');
+    } catch (error) {
+        setSettingsFileStatus(`Could not import settings: ${error.message}`, true);
+    } finally {
+        elements.settingsFileInput.value = '';
+    }
+}
+
 // ============================================
 // Event Listeners
 // ============================================
@@ -165,6 +252,9 @@ function setupEventListeners() {
     // Actions
     elements.translateBtn.addEventListener('click', startTranslation);
     elements.downloadBtn.addEventListener('click', downloadResult);
+    elements.exportSettingsBtn.addEventListener('click', exportSettings);
+    elements.importSettingsBtn.addEventListener('click', () => elements.settingsFileInput.click());
+    elements.settingsFileInput.addEventListener('change', (event) => importSettings(event.target.files[0]));
 
     // Initial UI state
     updateTranslateButton();

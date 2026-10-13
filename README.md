@@ -20,6 +20,7 @@ Translating subtitles is tedious and expensive:
 ## ✨ Features
 
 - **API Provider Toggle** - Use **Google AI Studio (Gemini API)** directly or connect via **OpenRouter**
+- **Portable Settings** - Export API keys and translation settings to a JSON file for use on another machine, then import them back into the app
 - **Drag & Drop** - Just drop your SRT file and start translating
 - **Smart Split-Sentence Merging** - Automatically merges short trailing subtitle blocks (like single words) into the previous block if they are part of the same sentence, preventing them from flashing on screen too fast and providing the AI with better context.
 - **Extend Short Subtitles** - Automatically increase display time for fast subtitles with custom safety gaps
@@ -61,6 +62,14 @@ For the best **performance/cost** balance, we recommend:
 ```
 gemini-3.1-flash-lite
 ```
+
+### Moving Settings Between Machines
+
+The web app stores settings in the current browser's `localStorage` by default.
+Use **Export settings** in the API Configuration card to download a JSON
+settings file, then use **Import settings** on the other machine. The exported
+file contains API keys in plain text, so keep it private, delete it after use,
+and never commit it to a repository.
 
 This model offers:
 - Extremely fast response times

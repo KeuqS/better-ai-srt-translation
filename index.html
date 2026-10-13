@@ -31,6 +31,18 @@
                 <input type="text" id="customModel" class="input-field"
                     placeholder="Custom model (leave empty for default: gemini-3.1-flash-lite)">
             </div>
+            <div style="display: flex; flex-wrap: wrap; gap: 0.6rem; margin-top: 0.8rem; align-items: center;">
+                <button type="button" class="btn btn-primary" id="exportSettingsBtn" style="width: auto; padding: 0.65rem 1rem;">
+                    Export settings
+                </button>
+                <button type="button" class="btn btn-primary" id="importSettingsBtn" style="width: auto; padding: 0.65rem 1rem;">
+                    Import settings
+                </button>
+                <input type="file" id="settingsFileInput" accept="application/json,.json" class="hidden">
+                <span id="settingsFileStatus" style="font-size: 0.8rem; color: var(--text-secondary);" aria-live="polite">
+                    Settings are stored in this browser. Export a file to move them to another machine.
+                </span>
+            </div>
         </div>
 
         <div class="card">
