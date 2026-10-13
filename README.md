@@ -42,6 +42,40 @@ Translating subtitles is tedious and expensive:
 6. Click **Translate**
 7. Click **Download Translated SRT**
 
+## 🖥️ CLI Batch Translation
+
+For unattended jobs or multiple subtitle files, the repository also includes a
+Node.js CLI. It accepts one `.srt` file or a directory of `.srt` files, keeps
+failed chunks in the original language, and exits with a non-zero status when
+any chunk could not be translated.
+
+Requirements: Node.js 18 or newer. The CLI has no additional dependencies.
+
+Translate every SRT file in a directory with Gemini:
+
+```bash
+GEMINI_API_KEY=your-key node scripts/translate-srt.mjs \
+  --input ./subtitles \
+  --output ./translated \
+  --language Turkish
+```
+
+OpenRouter can be selected explicitly:
+
+```bash
+OPENROUTER_API_KEY=your-key node scripts/translate-srt.mjs \
+  --input ./subtitles \
+  --output ./translated \
+  --language Turkish \
+  --provider openrouter
+```
+
+Useful options include `--model`, `--chunk-size`, `--parallel`,
+`--instructions`, and `--overwrite`. Run `node scripts/translate-srt.mjs
+--help` for the complete list. API keys can also be passed with `--api-key`,
+but environment variables are recommended so they do not end up in shell
+history or scripts.
+
 ## ⚙️ Configuration
 
 | Setting | Default | Description |
@@ -160,6 +194,9 @@ srt-translator/
 ├── src/
 │   ├── app.js          # Core application logic
 │   └── styles.css      # Dark theme styling
+├── scripts/
+│   ├── translate-srt.mjs       # CLI for single-file and batch translation
+│   └── translate-srt.test.mjs  # CLI parser and formatting tests
 └── assets/
     └── ui.webp         # UI screenshot
 ```
